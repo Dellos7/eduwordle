@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CONFIG } from '../config';
-import { GameState, PeerMessage, StudentResult } from '../types';
+import { GameState, PeerMessage, StudentResult, AwardsData } from '../types';
 import RankingView from './RankingView';
 
 declare const Peer: any;
@@ -20,8 +20,13 @@ const ProfessorDashboard: React.FC = () => {
   const peerRef = useRef<any>(null);
   const connectionsRef = useRef<any[]>([]);
 
+  // Referencia actualizada para que los callbacks de Peer vean el estado correcto
+  const gameStateRef = useRef(gameState);
   useEffect(() => {
-    // Inicializar PeerJS como HOST
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  useEffect(() => {
     const peerId = CONFIG.PEER_PREFIX + roomCode;
     peerRef.current = new Peer(peerId);
 
@@ -33,13 +38,27 @@ const ProfessorDashboard: React.FC = () => {
       connectionsRef.current.push(conn);
       
       conn.on('data', (data: PeerMessage) => {
-        handleIncomingData(data, conn);
+        if (data.type === 'SUBMIT_RESULT') {
+          const result: StudentResult = data.payload;
+          setGameState(prev => ({
+            ...prev,
+            results: [...prev.results, result]
+          }));
+        }
       });
 
       conn.on('open', () => {
         setConnectedStudents(prev => [...prev, conn.peer]);
-        // Enviar estado actual al recién conectado
-        syncStateWithConnection(conn);
+        // Sincronizar estado inmediatamente al conectar
+        const current = gameStateRef.current;
+        conn.send({
+          type: 'GAME_START',
+          payload: { 
+            word: current.activeWord, 
+            isActive: current.isActive,
+            startTime: current.startTime
+          }
+        });
       });
 
       conn.on('close', () => {
@@ -53,28 +72,6 @@ const ProfessorDashboard: React.FC = () => {
     };
   }, [roomCode]);
 
-  const handleIncomingData = (msg: PeerMessage, conn: any) => {
-    if (msg.type === 'SUBMIT_RESULT') {
-      const result: StudentResult = msg.payload;
-      setGameState(prev => ({
-        ...prev,
-        results: [...prev.results, result]
-      }));
-    }
-  };
-
-  const syncStateWithConnection = (conn: any) => {
-    const msg: PeerMessage = {
-      type: 'GAME_START',
-      payload: { 
-        word: gameState.activeWord, 
-        isActive: gameState.isActive,
-        startTime: gameState.startTime
-      }
-    };
-    conn.send(msg);
-  };
-
   const broadcast = (msg: PeerMessage) => {
     connectionsRef.current.forEach(conn => {
       if (conn.open) conn.send(msg);
@@ -86,15 +83,15 @@ const ProfessorDashboard: React.FC = () => {
     const cleanWord = word.trim().toUpperCase();
     const startTime = Date.now();
     
-    const newState = {
+    setGameState(prev => ({
+      ...prev,
       activeWord: cleanWord,
       isActive: true,
       startTime: startTime,
       endTime: null,
       results: []
-    };
-    
-    setGameState(newState);
+    }));
+
     broadcast({ 
       type: 'GAME_START', 
       payload: { word: cleanWord, isActive: true, startTime: startTime } 
@@ -103,8 +100,19 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const stopGame = () => {
+    const correctResults = gameState.results.filter(r => r.isCorrect);
+    const awards: AwardsData = {
+      fastest: [...correctResults].sort((a, b) => a.timeTaken - b.timeTaken).slice(0, 3),
+      mostEfficient: [...correctResults].sort((a, b) => a.attempts - b.attempts || a.timeTaken - b.timeTaken).slice(0, 3)
+    };
+
     setGameState(prev => ({ ...prev, isActive: false, endTime: Date.now() }));
+    
+    // Primero enviamos el fin de juego y luego los premios
     broadcast({ type: 'GAME_END', payload: null });
+    setTimeout(() => {
+      broadcast({ type: 'AWARDS', payload: awards });
+    }, 500);
   };
 
   const resetGame = () => {
@@ -134,7 +142,7 @@ const ProfessorDashboard: React.FC = () => {
       {!gameState.activeWord ? (
         <div className="bg-white p-8 rounded-2xl shadow-md border-2 border-dashed border-slate-200">
           <h3 className="text-xl font-bold mb-4 text-slate-800">Lanzar nueva palabra</h3>
-          <div className="flex gap-2">
+          <form onSubmit={(e) => { e.preventDefault(); launchWord(); }} className="flex gap-2">
             <input 
               type="text" 
               value={word}
@@ -143,13 +151,13 @@ const ProfessorDashboard: React.FC = () => {
               className="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono tracking-widest text-lg"
             />
             <button 
-              onClick={launchWord}
+              type="submit"
               disabled={!word}
               className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all"
             >
               ¡Lanzar!
             </button>
-          </div>
+          </form>
           <p className="mt-2 text-slate-400 text-xs italic">* Los alumnos verán esta palabra como un reto Wordle.</p>
         </div>
       ) : (
@@ -163,9 +171,9 @@ const ProfessorDashboard: React.FC = () => {
               {gameState.isActive ? (
                 <button 
                   onClick={stopGame}
-                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-md"
+                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-md flex items-center gap-2"
                 >
-                  Finalizar Tiempo
+                  🛑 Finalizar Tiempo y Premiar
                 </button>
               ) : (
                 <button 

@@ -9,18 +9,13 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onProfessorLogin, onStudentJoin }) => {
   const [activeTab, setActiveTab] = useState<'student' | 'professor'>('student');
-  const [password, setPassword] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleProfessorSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === CONFIG.PROFESSOR_PASSWORD) {
-      onProfessorLogin(true);
-    } else {
-      setError('Contraseña incorrecta');
-    }
+    onProfessorLogin(true);
   };
 
   const handleStudentSubmit = (e: React.FormEvent) => {
@@ -53,12 +48,12 @@ const Login: React.FC<LoginProps> = ({ onProfessorLogin, onStudentJoin }) => {
         {activeTab === 'student' ? (
           <form onSubmit={handleStudentSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tu Nombre</label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Juan Pérez" 
+                placeholder="Ej. Carmen García" 
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               />
             </div>
@@ -68,7 +63,7 @@ const Login: React.FC<LoginProps> = ({ onProfessorLogin, onStudentJoin }) => {
                 type="text" 
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value)}
-                placeholder="12345" 
+                placeholder="Ej. 12345" 
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               />
             </div>
@@ -77,21 +72,19 @@ const Login: React.FC<LoginProps> = ({ onProfessorLogin, onStudentJoin }) => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleProfessorSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña de Profesor</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" 
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-              />
+          <div className="space-y-6 text-center">
+            <div className="p-4 bg-indigo-50 rounded-xl">
+              <p className="text-sm text-indigo-700 font-medium">
+                Como profesor podrás crear palabras secretas y ver quién las resuelve más rápido en tiempo real.
+              </p>
             </div>
-            <button className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-slate-900 active:transform active:scale-95 transition-all">
-              Acceder al Panel
+            <button 
+              onClick={handleProfessorSubmit}
+              className="w-full bg-slate-800 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-slate-900 active:transform active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <span className="text-xl">🏫</span> Crear Nueva Sala
             </button>
-          </form>
+          </div>
         )}
         {error && <p className="mt-4 text-center text-red-500 text-sm font-semibold">{error}</p>}
       </div>

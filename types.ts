@@ -18,12 +18,18 @@ export interface StudentResult {
   isCorrect: boolean;
 }
 
+export interface AwardsData {
+  fastest: StudentResult[];
+  mostEfficient: StudentResult[];
+}
+
 export type MessageType = 
   | 'GAME_START' 
   | 'GAME_END' 
   | 'SUBMIT_RESULT' 
   | 'RESET'
-  | 'HEARTBEAT';
+  | 'HEARTBEAT'
+  | 'AWARDS';
 
 export interface PeerMessage {
   type: MessageType;
