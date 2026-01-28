@@ -34,7 +34,7 @@ const App: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tighter text-indigo-600 flex items-center gap-2">
             <span className="bg-indigo-600 text-white px-2 py-1 rounded shadow-sm">EDU</span>
-            WORDLE {CONFIG.VERSION}
+            WORDLE
           </h1>
           <p className="text-sm text-slate-500 font-medium">Aprendizaje en tiempo real</p>
         </div>
@@ -66,7 +66,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-12 text-slate-400 text-xs text-center">
-        &copy; 2024 EDUWORDLE 7.0 - Una herramienta pedagógica para el aula moderna.
+        &copy; 2026 EDUWORDLE - Una herramienta pedagógica para el aula moderna.
       </footer>
     </div>
   );

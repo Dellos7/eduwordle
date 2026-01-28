@@ -1,5 +1,5 @@
 {
-  "name": "EDUWORDLE 7.0",
+  "name": "EDUWORDLE",
   "description": "Una plataforma educativa multijugador en tiempo real basada en Wordle, donde los profesores crean salas y los alumnos compiten resolviendo palabras.",
   "requestFramePermissions": []
 }

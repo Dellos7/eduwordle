@@ -79,7 +79,7 @@ const ProfessorDashboard: React.FC = () => {
   };
 
   const launchWord = () => {
-    if (!word || word.length < 3) return;
+    if (!word || word.length < 3 || word.length > 5) return;
     const cleanWord = word.trim().toUpperCase();
     const startTime = Date.now();
     
@@ -141,24 +141,25 @@ const ProfessorDashboard: React.FC = () => {
 
       {!gameState.activeWord ? (
         <div className="bg-white p-8 rounded-2xl shadow-md border-2 border-dashed border-slate-200">
-          <h3 className="text-xl font-bold mb-4 text-slate-800">Lanzar nueva palabra</h3>
+          <h3 className="text-xl font-bold mb-4 text-slate-800">Lanzar nueva palabra (3-5 letras)</h3>
           <form onSubmit={(e) => { e.preventDefault(); launchWord(); }} className="flex gap-2">
             <input 
               type="text" 
               value={word}
-              onChange={(e) => setWord(e.target.value.toUpperCase())}
-              placeholder="Escribe la palabra secreta..." 
+              maxLength={5}
+              onChange={(e) => setWord(e.target.value.toUpperCase().replace(/[^A-ZÑ]/g, ''))}
+              placeholder="Ej. CIELO" 
               className="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-mono tracking-widest text-lg"
             />
             <button 
               type="submit"
-              disabled={!word}
+              disabled={word.length < 3}
               className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all"
             >
               ¡Lanzar!
             </button>
           </form>
-          <p className="mt-2 text-slate-400 text-xs italic">* Los alumnos verán esta palabra como un reto Wordle.</p>
+          <p className="mt-2 text-slate-400 text-xs italic">* Máximo 5 letras. Los alumnos verán esta palabra como un reto Wordle.</p>
         </div>
       ) : (
         <div className="space-y-6">
